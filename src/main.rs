@@ -1,7 +1,9 @@
 use std::fs::File;
 use std::io::BufWriter;
 use std::path::Path;
+
 extern crate png;
+extern crate nalgebra;
 
 struct Image<'a> {
     width: u32,
@@ -101,5 +103,10 @@ fn test_rainbow() {
 
 fn main() {
     println!("Making a .png file");
+
+    let v = nalgebra::Vector3::new(1, 2, 3);
+
+    println!("I made a vector: {:?}", v);
+
     test_rainbow();
 }

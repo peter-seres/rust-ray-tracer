@@ -5,6 +5,36 @@ use color::{Color, ColorData};
 use image::Image;
 use na::{Unit, Vector3};
 
+
+struct Camera {
+    width: u16,
+    height: u16,
+    fov: u16,        // field of view in degrees
+    aspect_ratio: f32
+}
+
+impl Camera {
+    fn new(width: u16, height: u16, fov: u16) -> Camera {
+        Camera {
+            width, 
+            height,
+            fov,
+            aspect_ratio: width as f32 / height as f32,
+        }
+    }
+
+    fn get_lens_upper_left(&self) -> Vector3<f32> {
+        let lens_half_height: f32 = ((self.fov / 2) as f32).to_radians().tan();
+        let lens_half_width: f32 = lens_half_height * self.aspect_ratio;
+        let x: f32 = -lens_half_width;
+        let y: f32 = lens_half_height;
+        let z: f32 = -1.0;
+        Vector3::<f32>::new(x, y, z)
+    }
+}
+
+
+
 fn trace_image(file_path: &str, trace_fn: &dyn Fn(u32, u32, u32, u32) -> Color) {
     let width = 960;
     let height = 540;
@@ -64,4 +94,10 @@ fn main() {
     let k = r.at_distance(3.0);
 
     println! {"vector at distance : {:?}", k};
+
+
+    let c = Camera::new(1920, 1080, 45);
+    let loc_upper_left = c.get_lens_upper_left();
+    println! {"upper left location : {:?}", loc_upper_left};
+
 }

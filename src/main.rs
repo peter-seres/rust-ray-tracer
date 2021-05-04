@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::io::BufWriter;
 use std::path::Path;
-
 extern crate png;
 
 struct Image<'a> {
@@ -35,28 +34,66 @@ impl<'a> Image<'a> {
     }
 }
 
-fn float_to_u8(x: f32) -> u8 {
-    (255.99 * x) as u8
+
+struct Color {
+    r: u8,
+    g: u8,
+    b: u8
+}
+
+impl Color {
+    fn new(r: u8, g: u8, b: u8) -> Color {
+        Color {r, g, b}
+    }
+
+    fn from_floats(r: f32, g: f32, b: f32) -> Color {
+        Color {
+            r: Color::float_to_u8(r), 
+            g: Color::float_to_u8(g),
+            b: Color::float_to_u8(b),
+        }
+    }
+
+    fn float_to_u8(x: f32) -> u8 {
+        (255.99 * x) as u8
+    }
+}
+
+struct ColorData {
+    data: Vec<u8>
+}
+
+impl ColorData {
+    fn new(v: Vec<u8>) -> ColorData {
+        ColorData {data: v}
+    }
+
+    fn push(&mut self, c: Color) {
+        self.data.push(c.r);
+        self.data.push(c.g);
+        self.data.push(c.b);
+    }
+
+    fn into_vec(self) -> Vec<u8> {
+        self.data
+    }
 }
 
 fn test_rainbow() {
     let width = 1920;
     let height = 1080;
 
-    let mut data = vec![];
+    let mut color_data = ColorData::new(vec![]);
 
     for j in 0..height {
         for i in 0..width {
-            let r: u8 = float_to_u8(i as f32 / width as f32);
-            let g: u8 = float_to_u8(j as f32 / height as f32);
-            let b: u8 = 80;
 
-            data.push(r);
-            data.push(g);
-            data.push(b);
+            let c = Color::from_floats(i as f32 / width as f32, j as f32 / height as f32, 0.3);
+            color_data.push(c);
         }
     }
 
+    let data = color_data.into_vec();
     let im = Image::new(width, height, &data);
     im.save_as_png(r"output/test.png").unwrap();
 }
@@ -64,22 +101,5 @@ fn test_rainbow() {
 
 fn main() {
     println!("Making a .png file");
-
-    let data = vec![
-        255, 0, 0,      // Red
-        0, 255, 0,      // Green
-        0, 0, 255,      // Blue
-        0, 0, 0,        // Black
-        125, 125, 125,  // Grey
-        255, 255, 255,  // White
-    ];
-
-    let im = Image::new(3, 2, &data);
-
-    match im.save_as_png(r"output/image.png") {
-        Ok(_output_path) => println!("Successfully saved image."),
-        Err(e) => panic!("Problem writing to the file: {}", e),
-    };
-
     test_rainbow();
 }

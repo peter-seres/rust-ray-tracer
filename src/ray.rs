@@ -9,6 +9,13 @@ pub struct Ray {
 }
 
 impl Ray {
+    pub fn new(origin: Vector3<f32>, direction: Vector3<f32>) -> Self {
+        Self { 
+            origin, 
+            dir: Unit::try_new(direction, 1e-10).unwrap()
+        }
+    }
+
     pub fn default() -> Ray {
         let default_dir = Vector3::<f32>::new(0.0, 0.0, -1.0);
         Ray {

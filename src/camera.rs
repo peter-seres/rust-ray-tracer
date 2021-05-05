@@ -32,14 +32,26 @@ impl Iterator for Camera {
     type Item = Ray;
 
     fn next(&mut self) -> Option<Ray> {
-        let i = self.iterator_state / self.height;
-        let j = self.iterator_state % self.height;
+        let i = self.iterator_state % self.height;
+        let j = self.iterator_state / self.height;
 
-        if i == self.width {
+        println!("idxs: i: {}, j: {}", i, j);
+
+        if j == self.height {
             None
         } else {
             self.iterator_state += 1;
-            Some(Ray::default())
+            let ray_origin = Vector3::<f32>::zeros();   // camera position
+
+            let x_step_size = self.lens_width / (self.width - 1) as f32;
+            let y_step_size = self.lens_height / (self.height - 1) as f32;
+
+            let x: f32 = - self.lens_width / 2.0 + (i as f32) * x_step_size;
+            let y: f32 = self.lens_height / 2.0 - (j as f32) * y_step_size;
+
+            let ray_dir = Vector3::<f32>::new(x, y, -1.0);
+            println!("Ray direction un-normalized: {:?}", ray_dir);
+            Some(Ray::new(ray_origin, ray_dir))
         }
     }
 }

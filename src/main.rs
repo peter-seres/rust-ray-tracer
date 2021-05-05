@@ -86,8 +86,8 @@ fn main() {
     // let k = r.at_distance(3.0);
 
     // println! {"vector at distance : {:?}", k};
-    let c = Camera::new(2, 3, 45);
+    let c = Camera::new(3, 3, 45);
     for ray in c {
-        println!("{:?}", ray)
+        // println!("{:?}", ray)
     }
 }

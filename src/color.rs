@@ -5,6 +5,11 @@ pub struct Color {
 }
 
 impl Color {
+
+    pub fn new(r: u8, g: u8, b: u8) -> Self {
+        Color{r, g, b}
+    }
+
     pub fn from_floats(r: f32, g: f32, b: f32) -> Color {
         Color {
             r: Color::float_to_u8(r),

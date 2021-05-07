@@ -2,8 +2,6 @@ use std::fs::File;
 use std::io::BufWriter;
 use std::path::Path;
 
-extern crate png;
-
 pub struct Image<'a> {
     width: u32,
     height: u32,

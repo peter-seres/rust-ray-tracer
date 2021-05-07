@@ -1,18 +1,16 @@
-extern crate nalgebra as na;
-use na::{Unit, Vector3};
-
+use crate::{Unit, Vector3};
 
 #[derive(Debug)]
 pub struct Ray {
-    origin: Vector3<f32>,
-    dir: Unit<Vector3<f32>>,
+    pub origin: Vector3,
+    pub dir: Unit<Vector3>,
 }
 
 impl Ray {
-    pub fn new(origin: Vector3<f32>, direction: Vector3<f32>) -> Self {
-        Self { 
-            origin, 
-            dir: Unit::try_new(direction, 1e-10).unwrap()
+    pub fn new(origin: Vector3, direction: Vector3) -> Self {
+        Self {
+            origin,
+            dir: Unit::try_new(direction, 1e-10).unwrap(),
         }
     }
 
@@ -24,7 +22,7 @@ impl Ray {
     //     }
     // }
 
-    pub fn at_distance(&self, d: f32) -> Vector3<f32> {
-        self.origin + d * self.dir.as_ref()
-    }
+    // pub fn at_distance(&self, d: f32) -> Vector3<f32> {
+    //     self.origin + d * self.dir.as_ref()
+    // }
 }

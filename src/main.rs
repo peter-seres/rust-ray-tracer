@@ -1,16 +1,27 @@
-extern crate nalgebra as na;
-mod color;
-mod image;
 mod camera;
+mod color;
+mod consts;
+mod image;
 mod ray;
-use color::{Color, ColorData};
-use image::Image;
+mod types;
+
 use camera::Camera;
+use color::{Color, ColorData};
+pub use consts::*;
+use image::Image;
 use ray::Ray;
+pub use types::*;
 
+fn raycast(ray: Ray) -> Color {
+    let sky_blue: Color = Color::new(0.5, 0.7, 1.0);
+    let white: Color = Color::new(1.0, 1.0, 1.0);
 
-fn raycast(r: Ray) -> Color {
-    Color::new(125, 125, 255)
+    let sky_scaler = ray.dir[1];
+
+    let c = ((1.0 - sky_scaler) * sky_blue) + (white * sky_scaler);
+    c
+
+    // Color::new(125, 125, 255)
 }
 
 fn main() {

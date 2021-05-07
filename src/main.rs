@@ -20,12 +20,10 @@ const SKYBLUE: Color = Color::new(0.5, 0.7, 1.0);
 const RED: Color = Color::new(1.0, 0.1, 0.1);
 const BLUE: Color = Color::new(0.1, 0.1, 1.0);
 
-struct Normal(Vector3);
-
 
 trait Hittable {
-    fn get_color(&self) -> Color;
-    fn intersect(&self, ray: &Ray) -> Option<(Scalar, Color)>;
+    fn get_normal(&self, p: Point) -> Normal;
+    fn intersect(&self, ray: &Ray) -> Option<(Scalar, Color, Normal)>;
 }
 
 struct Sphere {
@@ -41,11 +39,11 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn get_color(&self) -> Color {
-        self.color
+    fn get_normal(&self, p: Point) -> Normal {
+        p - self.origin
     }
 
-    fn intersect(&self, ray: &Ray) -> Option<(Scalar, Color)> {
+    fn intersect(&self, ray: &Ray) -> Option<(Scalar, Color, Normal)> {
 
         // Vector pointing from Sphere origin to Ray origin
         let sphere_to_ray = ray.origin - self.origin;
@@ -55,6 +53,7 @@ impl Hittable for Sphere {
         let b: Scalar = 2.0 * sphere_to_ray.dot(&ray.dir);
         let c: Scalar = sphere_to_ray.dot(&sphere_to_ray) - self.radius * self.radius;
 
+        // Look for solutions of the second order equation:
         let discriminant: Scalar = b * b - 4.0 * a * c;
 
         if discriminant < 0.0 {
@@ -64,13 +63,17 @@ impl Hittable for Sphere {
 
             if numerator > 0.0 {
                 let distance: Scalar = numerator / (2.0 * a);
-                Some((distance, self.color))
+                let p = ray.at_distance(distance);
+                let normal = self.get_normal(p);
+                Some((distance, self.color, normal))
             } else {
                 numerator = -b + discriminant.sqrt();
 
                 if numerator > 0.0 {
                     let distance: Scalar = numerator / (2.0 * a);
-                    Some((distance, self.color))
+                    let p = ray.at_distance(distance);
+                    let normal = self.get_normal(p);
+                    Some((distance, self.color, normal))
                 }
                 else {
                     None
@@ -81,15 +84,15 @@ impl Hittable for Sphere {
 }
 
 
-fn get_closest_intersection<const N: usize>(ray: Ray, hittables: &[&dyn Hittable; N]) -> Option<(Scalar, Color)> {
-    let mut hit: (Scalar, Option<Color>) = (1e3, None);
+fn get_closest_intersection<const N: usize>(ray: Ray, hittables: &[&dyn Hittable; N]) -> Option<(Point, Color, Normal)> {
+    let mut hit: (Scalar, Option<(Color, Normal)>) = (1e3, None);
 
     for h in hittables{
         match h.intersect(&ray) {
-            Some((distance, color)) => {
+            Some((distance, color, normal)) => {
                 if distance < hit.0 && distance > 0.0 {
                     hit.0 = distance;
-                    hit.1 = Some(h.get_color());
+                    hit.1 = Some((color, normal));
                 }
             },
             None => {},
@@ -98,18 +101,18 @@ fn get_closest_intersection<const N: usize>(ray: Ray, hittables: &[&dyn Hittable
 
     return match hit.1 {
         None => None,
-        Some(color) => Some((hit.0, color)),
+        Some((color, normal)) => Some((ray.at_distance(hit.0), color, normal)),
     }
 }
 
 
 fn raycast<const N: usize>(ray: Ray, hittables: &[&dyn Hittable; N]) -> Color {
-    let sky_scaler = ray.dir[1];
-    let background: Color = (1.0 - sky_scaler) * WHITE + sky_scaler * SKYBLUE;
+    // let sky_scaler = ray.dir[1];
+    // let background: Color = (1.0 - sky_scaler) * WHITE + sky_scaler * SKYBLUE;
 
-    return match get_closest_intersection(ray, hittables) {
-        None => background,
-        Some((_dist, color)) => color,
+    match get_closest_intersection(ray, hittables) {
+        None => BLACK,
+        Some((_point, color, _normal)) => color
     }
 }
 

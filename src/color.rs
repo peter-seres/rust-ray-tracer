@@ -1,6 +1,6 @@
 use crate::Scalar;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Color {
     r: Scalar,
     g: Scalar,

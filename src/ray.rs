@@ -1,4 +1,5 @@
-use crate::{Unit, Vector3};
+use crate::{Unit, Vector3, NORM_EPS};
+
 
 #[derive(Debug)]
 pub struct Ray {
@@ -10,7 +11,7 @@ impl Ray {
     pub fn new(origin: Vector3, direction: Vector3) -> Self {
         Self {
             origin,
-            dir: Unit::try_new(direction, 1e-10).unwrap(),
+            dir: Unit::try_new(direction, NORM_EPS).unwrap(),
         }
     }
 

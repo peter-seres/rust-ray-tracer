@@ -5,24 +5,29 @@ mod image;
 mod ray;
 mod types;
 
-use camera::Camera;
-use color::{Color, ColorData};
+pub use camera::Camera;
+pub use color::{Color, ColorData};
 pub use consts::*;
-use image::Image;
-use ray::Ray;
+pub use image::Image;
+pub use ray::Ray;
 pub use types::*;
 
+// Pre-define a few colors.
+const WHITE: Color = Color::new(1.0, 1.0, 1.0);
+const BLACK: Color = Color::new(0.0, 0.0, 0.0);
+const GREY: Color = Color::new(0.5, 0.5, 0.5);
+const SKYBLUE: Color = Color::new(0.5, 0.7, 1.0);
+const RED: Color = Color::new(1.0, 0.1, 0.1);
+
+
 fn raycast(ray: Ray) -> Color {
-    let sky_blue: Color = Color::new(0.5, 0.7, 1.0);
-    let white: Color = Color::new(1.0, 1.0, 1.0);
-
     let sky_scaler = ray.dir[1];
-
-    (1.0 - sky_scaler) * sky_blue + white * sky_scaler
+    (1.0 - sky_scaler) * WHITE + sky_scaler * SKYBLUE
 }
 
+
 fn main() {
-    // Set image resolution
+    // Set image resolution and ouput path:
     let width = 192;
     let height = 108;
     let file_path = r"output/traced.png";

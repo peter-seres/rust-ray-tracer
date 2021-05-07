@@ -1,5 +1,6 @@
 use crate::Scalar;
 
+#[derive(Debug)]
 pub struct Color {
     r: Scalar,
     g: Scalar,
@@ -7,7 +8,7 @@ pub struct Color {
 }
 
 impl Color {
-    pub fn new(r: Scalar, g: Scalar, b: Scalar) -> Self {
+    pub const fn new(r: Scalar, g: Scalar, b: Scalar) -> Self {
         Color { r, g, b }
     }
 
@@ -64,6 +65,18 @@ impl std::ops::Mul<Color> for Scalar {
         let r = self * _rhs.r;
         let g = self * _rhs.g;
         let b = self * _rhs.b;
+
+        Color::new(r, g, b)
+    }
+}
+
+impl std::ops::Add<Color> for Scalar {
+    type Output = Color;
+
+    fn add(self, _rhs: Color) -> Color {
+        let r = self + _rhs.r;
+        let g = self + _rhs.g;
+        let b = self + _rhs.b;
 
         Color::new(r, g, b)
     }

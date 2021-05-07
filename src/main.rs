@@ -18,12 +18,13 @@ const BLACK: Color = Color::new(0.0, 0.0, 0.0);
 const GREY: Color = Color::new(0.5, 0.5, 0.5);
 const SKYBLUE: Color = Color::new(0.5, 0.7, 1.0);
 const RED: Color = Color::new(1.0, 0.1, 0.1);
-
+const BLUE: Color = Color::new(0.1, 0.1, 1.0);
 
 struct Normal(Vector3);
 
 
 trait Hittable {
+    fn get_color(&self) -> Color;
     fn intersect(&self, ray: &Ray) -> Option<(Scalar, Color)>;
 }
 
@@ -40,6 +41,10 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
+    fn get_color(&self) -> Color {
+        self.color
+    }
+
     fn intersect(&self, ray: &Ray) -> Option<(Scalar, Color)> {
 
         // Vector pointing from Sphere origin to Ray origin
@@ -76,27 +81,43 @@ impl Hittable for Sphere {
 }
 
 
+fn get_closest_intersection<const N: usize>(ray: Ray, hittables: &[&dyn Hittable; N]) -> Option<(Scalar, Color)> {
+    let mut hit: (Scalar, Option<Color>) = (1e3, None);
+
+    for h in hittables{
+        match h.intersect(&ray) {
+            Some((distance, color)) => {
+                if distance < hit.0 && distance > 0.0 {
+                    hit.0 = distance;
+                    hit.1 = Some(h.get_color());
+                }
+            },
+            None => {},
+        }
+    }
+
+    return match hit.1 {
+        None => None,
+        Some(color) => Some((hit.0, color)),
+    }
+}
+
+
 fn raycast<const N: usize>(ray: Ray, hittables: &[&dyn Hittable; N]) -> Color {
     let sky_scaler = ray.dir[1];
     let background: Color = (1.0 - sky_scaler) * WHITE + sky_scaler * SKYBLUE;
 
-    let mut c = BLACK;
-
-    for h in hittables{
-        match h.intersect(&ray) {
-            Some((_distance, color)) => {c = c + color},
-            None => return background,
-        }
+    return match get_closest_intersection(ray, hittables) {
+        None => background,
+        Some((_dist, color)) => color,
     }
-
-    c
 }
 
 
 fn main() {
     // Set image resolution and ouput path:
-    let width = 192;
-    let height = 108;
+    let width = 860;
+    let height = 640;
     let file_path = r"output/traced.png";
 
     // Camera setup:
@@ -106,9 +127,10 @@ fn main() {
     let mut color_data = ColorData::new(vec![]);
 
     // Make objects in the scene:
-    const N: usize = 1;                  // number of objects
-    let s = Sphere::new(Vector3::new(0.0, 0.0, -5.0), 0.5, RED);
-    let objects: [&dyn Hittable; N] = [&s];
+    const N: usize = 2;                  // number of objects
+    let s1 = Sphere::new(Vector3::new(0.0, 0.0, -5.0), 0.5, RED);
+    let s2 = Sphere::new(Vector3::new(1.0, 0.5, -7.0), 0.5, BLUE);
+    let objects: [&dyn Hittable; N] = [&s1, &s2];
 
     // Iterate through the Camera, do ray tracing and gather the color data
     for ray in c {

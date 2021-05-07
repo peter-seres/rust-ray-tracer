@@ -18,10 +18,7 @@ fn raycast(ray: Ray) -> Color {
 
     let sky_scaler = ray.dir[1];
 
-    let c = ((1.0 - sky_scaler) * sky_blue) + (white * sky_scaler);
-    c
-
-    // Color::new(125, 125, 255)
+    (1.0 - sky_scaler) * sky_blue + white * sky_scaler
 }
 
 fn main() {

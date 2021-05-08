@@ -33,11 +33,12 @@ const AMBIENT_INT: Scalar = 0.2;
 #[derive(Clone, Copy)]
 struct Light {
     origin: Point,
+    strength: Scalar,
 }
 
 impl Light {
-    fn new(origin: Point) -> Self {
-        Self{origin}
+    fn new(origin: Point, strength: Scalar) -> Self {
+        Self{origin, strength}
     }
 }
 
@@ -64,31 +65,36 @@ fn get_closest_intersection<const N: usize>(ray: Ray, hittables: &[&dyn Hittable
 
 
 
-fn raycast<const N: usize>(ray: Ray, hittables: &[&dyn Hittable; N], light: Light) -> Color {
+fn raycast<const N: usize, const M: usize>(ray: Ray, hittables: &[&dyn Hittable; N], lights: &[&Light; M]) -> Color {
 
     // Find the closest hit for a raycast.
     return match get_closest_intersection(ray, hittables) {
         None => return BLACK,
         Some((mut point, base_color, normal)) => {
 
-
             // Shift point P along the normal vector to avoid shadow acne:
             const BIAS: Scalar = 2e-4;
             point = point + BIAS * normal;
-
             let mut color: Color = base_color * AMBIENT_INT;
 
-            let vector_to_light = light.origin - point;
-            let lambert_factor: Scalar = LAMBERT_INT * vector_to_light.dot(&normal);
+            for light in lights {
+                let vector_to_light: Vector3 = light.origin - point;
 
-            let ray_to_light = Ray::new(point, vector_to_light);
-            match get_closest_intersection(ray_to_light, hittables) {
-                None => {},
-                Some(_) => return color
-            }
+                // Calculate light intensity fall-off
+                let distance: Scalar = vector_to_light.norm();
+                let intensity: Scalar = light.strength / (distance * distance);
 
-            if lambert_factor > 0.0 {
-                color = color * (1.0 + lambert_factor);
+                let lambert_factor: Scalar = intensity * LAMBERT_INT * vector_to_light.dot(&normal);
+
+                let ray_to_light = Ray::new(point, vector_to_light);
+                match get_closest_intersection(ray_to_light, hittables) {
+                    None => {
+                        if lambert_factor > 0.0 {
+                            color = color * (1.0 + lambert_factor);
+                        }
+                    },
+                    Some(_) => continue,
+                }
             }
             color
         }
@@ -116,11 +122,14 @@ fn main() {
     let objects: [&dyn Hittable; N] = [&s1, &s2, &p];
 
     // Make lights in the scene:
-    let light = Light::new(Vector3::new(-3.0, 2.0, -2.0));
+    const M: usize = 2;
+    let l1 = Light::new(Vector3::new(-3.0, 2.0, -2.0), 10.0);
+    let l2 = Light::new(Vector3::new(3.0, 2.0, -2.0), 2.0);
+    let lights: [&Light; M] = [&l1, &l2];
 
     // Iterate through the Camera, do ray tracing and gather the color data
     for ray in c {
-        let c: Color = raycast(ray, &objects, light);
+        let c: Color = raycast(ray, &objects, &lights);
         color_data.push(c);
     }
 

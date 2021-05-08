@@ -25,7 +25,7 @@ pub struct InfPlane {
 }
 
 impl InfPlane {
-    pub const HIT_EPS: Scalar = 1e-2;
+    pub const HIT_EPS: Scalar = 1e-4;
 
     pub fn new(origin: Vector3, normal: Normal, color: Color) -> Self {
         Self{origin, normal, color}

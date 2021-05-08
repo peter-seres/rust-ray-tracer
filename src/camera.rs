@@ -1,5 +1,4 @@
-use crate::Ray;
-use crate::{Scalar, Vector3};
+use crate::{Ray, Scalar, Vector3};
 
 pub struct Camera {
     width: u32,                   // Pixel count - U

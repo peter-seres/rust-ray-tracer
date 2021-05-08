@@ -1,37 +1,43 @@
-use crate::{Point, Vector3, Normal, Ray, Scalar, Color};
+use crate::{Color, Normal, Point, Ray, Scalar, Vector3};
 
 pub trait Hittable {
     fn get_normal(&self, p: Point) -> Normal;
     fn intersect(&self, ray: &Ray) -> Option<(Scalar, Color, Normal)>;
 }
 
-
 pub struct Sphere {
     origin: Point,
     radius: Scalar,
-    color: Color
+    color: Color,
 }
 
 impl Sphere {
     pub fn new(origin: Vector3, radius: Scalar, color: Color) -> Self {
-        Self{origin, radius, color}
+        Self {
+            origin,
+            radius,
+            color,
+        }
     }
 }
 
 pub struct InfPlane {
     origin: Point,
     normal: Normal,
-    color: Color
+    color: Color,
 }
 
 impl InfPlane {
     pub const HIT_EPS: Scalar = 1e-4;
 
     pub fn new(origin: Vector3, normal: Normal, color: Color) -> Self {
-        Self{origin, normal, color}
+        Self {
+            origin,
+            normal,
+            color,
+        }
     }
 }
-
 
 impl Hittable for Sphere {
     fn get_normal(&self, p: Point) -> Normal {
@@ -39,7 +45,6 @@ impl Hittable for Sphere {
     }
 
     fn intersect(&self, ray: &Ray) -> Option<(Scalar, Color, Normal)> {
-
         // Vector pointing from Sphere origin to Ray origin
         let sphere_to_ray = ray.origin - self.origin;
 
@@ -69,8 +74,7 @@ impl Hittable for Sphere {
                     let p = ray.at_distance(distance);
                     let normal = self.get_normal(p);
                     Some((distance, self.color, normal))
-                }
-                else {
+                } else {
                     None
                 }
             }
@@ -90,7 +94,6 @@ impl Hittable for InfPlane {
         if denominator.abs() < InfPlane::HIT_EPS {
             None
         } else {
-
             // Find the location of the intersection
             let lp = self.origin - ray.origin;
             let nominator = lp.dot(&self.normal);

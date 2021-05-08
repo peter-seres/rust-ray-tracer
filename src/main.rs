@@ -15,11 +15,12 @@ pub use image::Image;
 pub use lights::{Light, PointLight};
 pub use ray::Ray;
 pub use types::*;
+pub use logger::{Logger, LogLevel};
 
 // Shader settings:
-const LAMBERT_INT: Scalar = 0.8;
-const AMBIENT_INT: Scalar = 0.2;
-const REFLECTION_INT: Scalar = 0.9;
+const LAMBERT_INT: Scalar = 0.9;
+const AMBIENT_INT: Scalar = 0.15;
+const REFLECTION_INT: Scalar = 0.6;
 
 fn get_closest_intersection<const N: usize>(
     ray: Ray,
@@ -104,8 +105,12 @@ fn sample<const N: usize, const M: usize>(
 
 fn main() {
     // Set image resolution and ouput path:
-    let width = 860;
-    let height = 640;
+    // let width = 860;
+    // let height = 640;
+
+    let width = 2 * 1920;
+    let height = 2 * 1080;
+
     let file_path = r"output/traced.png";
 
     // Camera setup:
@@ -116,9 +121,9 @@ fn main() {
 
     // Make objects in the scene:
     const N: usize = 4; // number of objects
-    let s1 = Sphere::new(Vector3::new(-0.6, 0.0, -7.0), 0.7, RED);
+    let s1 = Sphere::new(Vector3::new(-0.6, -0.4, -7.0), 0.8, RED);
     let s2 = Sphere::new(Vector3::new(1.3, 0.5, -5.0), 1.3, BLUE);
-    let s3 = Sphere::new(Vector3::new(-1.3, 0.0, -3.0), 0.4, GREEN);
+    let s3 = Sphere::new(Vector3::new(-1.3, -0.5, -3.0), 0.5, GREEN);
 
     let p = InfPlane::new(
         Vector3::new(0.0, -1.0, -5.0),

@@ -14,6 +14,7 @@ pub use ray::Ray;
 pub use types::*;
 pub use hittables::{Hittable, Sphere, InfPlane};
 
+
 // Pre-define a few colors.
 const WHITE: Color = Color::new(1.0, 1.0, 1.0);
 const BLACK: Color = Color::new(0.0, 0.0, 0.0);
@@ -26,7 +27,7 @@ const GREEN: Color = Color::new(0.1, 1.0, 0.1);
 
 // Shader settings:
 const LAMBERT_INT: Scalar = 0.5;
-const AMBIENT_INT: Scalar = 0.9;
+const AMBIENT_INT: Scalar = 0.2;
 
 
 #[derive(Clone, Copy)]
@@ -63,13 +64,23 @@ fn get_closest_intersection<const N: usize>(ray: Ray, hittables: &[&dyn Hittable
 
 
 
-fn raycast<const N: usize>(ray: Ray, hittables: &[&dyn Hittable; N], _light: Light) -> Color {
+fn raycast<const N: usize>(ray: Ray, hittables: &[&dyn Hittable; N], light: Light) -> Color {
 
-    let mut _hit: Option<(Point, Color, Normal)> = None;
-
+    // Find the closest hit for a raycast.
     return match get_closest_intersection(ray, hittables) {
-        None => BLACK,
-        Some((_point, color, _normal)) => color * AMBIENT_INT
+        None => return BLACK,
+        Some((point, base_color, normal)) => {
+
+            let mut color: Color = base_color * AMBIENT_INT;
+
+            let vector_to_light = light.origin - point;
+            let lambert_factor: Scalar = LAMBERT_INT * vector_to_light.dot(&normal);
+
+            if lambert_factor > 0.0 {
+                color = color * (1.0 + lambert_factor);
+            }
+            color
+        }
     }
 }
 
@@ -94,7 +105,7 @@ fn main() {
     let objects: [&dyn Hittable; N] = [&s1, &s2, &p];
 
     // Make lights in the scene:
-    let light = Light::new(Vector3::new(-1.0, 1.0, 0.0));
+    let light = Light::new(Vector3::new(-5.0, 1.0, -1.0));
 
     // Iterate through the Camera, do ray tracing and gather the color data
     for ray in c {

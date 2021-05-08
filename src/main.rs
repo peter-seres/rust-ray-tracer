@@ -26,7 +26,7 @@ const GREEN: Color = Color::new(0.1, 1.0, 0.1);
 
 
 // Shader settings:
-const LAMBERT_INT: Scalar = 0.5;
+const LAMBERT_INT: Scalar = 0.99;
 const AMBIENT_INT: Scalar = 0.2;
 
 
@@ -69,12 +69,23 @@ fn raycast<const N: usize>(ray: Ray, hittables: &[&dyn Hittable; N], light: Ligh
     // Find the closest hit for a raycast.
     return match get_closest_intersection(ray, hittables) {
         None => return BLACK,
-        Some((point, base_color, normal)) => {
+        Some((mut point, base_color, normal)) => {
+
+
+            // Shift point P along the normal vector to avoid shadow acne:
+            const BIAS: Scalar = 2e-4;
+            point = point + BIAS * normal;
 
             let mut color: Color = base_color * AMBIENT_INT;
 
             let vector_to_light = light.origin - point;
             let lambert_factor: Scalar = LAMBERT_INT * vector_to_light.dot(&normal);
+
+            let ray_to_light = Ray::new(point, vector_to_light);
+            match get_closest_intersection(ray_to_light, hittables) {
+                None => {},
+                Some(_) => return color
+            }
 
             if lambert_factor > 0.0 {
                 color = color * (1.0 + lambert_factor);
@@ -100,12 +111,12 @@ fn main() {
     // Make objects in the scene:
     const N: usize = 3;                  // number of objects
     let s1 = Sphere::new(Vector3::new(0.0, 0.0, -5.0), 0.5, RED);
-    let s2 = Sphere::new(Vector3::new(1.0, 0.5, -7.0), 0.5, BLUE);
-    let p = InfPlane::new(Vector3::new(0.0, -2.0, -5.0), Vector3::new(0.0, 1.0, 0.0), GREEN);
+    let s2 = Sphere::new(Vector3::new(1.3, 0.5, -7.0), 1.5, BLUE);
+    let p = InfPlane::new(Vector3::new(0.0, -1.0, -5.0), Vector3::new(0.0, 1.0, 0.0), GREY);
     let objects: [&dyn Hittable; N] = [&s1, &s2, &p];
 
     // Make lights in the scene:
-    let light = Light::new(Vector3::new(-5.0, 1.0, -1.0));
+    let light = Light::new(Vector3::new(-3.0, 2.0, -2.0));
 
     // Iterate through the Camera, do ray tracing and gather the color data
     for ray in c {

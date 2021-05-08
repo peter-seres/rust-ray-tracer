@@ -14,7 +14,6 @@ pub use ray::Ray;
 pub use types::*;
 pub use hittables::{Hittable, Sphere, InfPlane};
 
-
 // Pre-define a few colors.
 const WHITE: Color = Color::new(1.0, 1.0, 1.0);
 const BLACK: Color = Color::new(0.0, 0.0, 0.0);
@@ -24,21 +23,38 @@ const RED: Color = Color::new(1.0, 0.1, 0.1);
 const BLUE: Color = Color::new(0.1, 0.1, 1.0);
 const GREEN: Color = Color::new(0.1, 1.0, 0.1);
 
-
 // Shader settings:
 const LAMBERT_INT: Scalar = 0.99;
 const AMBIENT_INT: Scalar = 0.2;
 
+trait Light {
+    fn get_origin(&self) -> Point;
+    fn get_intensity(&self, point: Point, normal: Normal) -> Scalar;
+}
 
 #[derive(Clone, Copy)]
-struct Light {
+struct PointLight {
     origin: Point,
     strength: Scalar,
 }
 
-impl Light {
+impl PointLight {
     fn new(origin: Point, strength: Scalar) -> Self {
         Self{origin, strength}
+    }
+}
+
+impl Light for PointLight {
+    fn get_origin(&self) -> Point {
+        self.origin
+    }
+
+    fn get_intensity(&self, point: Point, normal: Normal) -> Scalar {
+        let vector_to_light: Vector3 = self.origin - point;
+        let distance: Scalar = vector_to_light.norm();
+        let intensity: Scalar = self.strength / (distance * distance);
+        let lambert_intensity: Scalar = intensity * LAMBERT_INT * vector_to_light.dot(&normal);
+        lambert_intensity
     }
 }
 
@@ -63,9 +79,7 @@ fn get_closest_intersection<const N: usize>(ray: Ray, hittables: &[&dyn Hittable
     }
 }
 
-
-
-fn raycast<const N: usize, const M: usize>(ray: Ray, hittables: &[&dyn Hittable; N], lights: &[&Light; M]) -> Color {
+fn raycast<const N: usize, const M: usize>(ray: Ray, hittables: &[&dyn Hittable; N], lights: &[&dyn Light; M]) -> Color {
 
     // Find the closest hit for a raycast.
     return match get_closest_intersection(ray, hittables) {
@@ -78,22 +92,14 @@ fn raycast<const N: usize, const M: usize>(ray: Ray, hittables: &[&dyn Hittable;
             let mut color: Color = base_color * AMBIENT_INT;
 
             for light in lights {
-                let vector_to_light: Vector3 = light.origin - point;
-
-                // Calculate light intensity fall-off
-                let distance: Scalar = vector_to_light.norm();
-                let intensity: Scalar = light.strength / (distance * distance);
-
-                let lambert_factor: Scalar = intensity * LAMBERT_INT * vector_to_light.dot(&normal);
-
-                let ray_to_light = Ray::new(point, vector_to_light);
-                match get_closest_intersection(ray_to_light, hittables) {
-                    None => {
-                        if lambert_factor > 0.0 {
-                            color = color * (1.0 + lambert_factor);
-                        }
-                    },
+                let vector_to_light = light.get_origin() - point;
+                let ray = Ray::new(point, vector_to_light);
+                match get_closest_intersection(ray, hittables) {
                     Some(_) => continue,
+                    None => {
+                        let intensity: Scalar = light.get_intensity(point, normal);
+                        color = color * (1.0 + intensity);
+                    }
                 }
             }
             color
@@ -109,7 +115,7 @@ fn main() {
     let file_path = r"output/traced.png";
 
     // Camera setup:
-    let c = Camera::new(width, height, 45);
+    let c = Camera::new(width, height, 60);
 
     // Data allocation into Vector:
     let mut color_data = ColorData::new(vec![]);
@@ -123,9 +129,9 @@ fn main() {
 
     // Make lights in the scene:
     const M: usize = 2;
-    let l1 = Light::new(Vector3::new(-3.0, 2.0, -2.0), 10.0);
-    let l2 = Light::new(Vector3::new(3.0, 2.0, -2.0), 2.0);
-    let lights: [&Light; M] = [&l1, &l2];
+    let l1 = PointLight::new(Vector3::new(-3.0, 2.0, -2.0), 10.0);
+    let l2 = PointLight::new(Vector3::new(3.0, 2.0, -2.0), 2.0);
+    let lights: [&dyn Light; M] = [&l1, &l2];
 
     // Iterate through the Camera, do ray tracing and gather the color data
     for ray in c {

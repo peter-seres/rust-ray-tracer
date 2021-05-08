@@ -122,17 +122,19 @@ fn main() {
     let mut color_data = ColorData::new(vec![]);
 
     // Make objects in the scene:
-    const N: usize = 4; // number of objects
-    let s1 = Sphere::new(Vector3::new(-0.6, -0.4, -7.0), 0.8, RED);
-    let s2 = Sphere::new(Vector3::new(1.3, 0.5, -5.0), 1.3, BLUE);
-    let s3 = Sphere::new(Vector3::new(-1.3, -0.5, -3.0), 0.5, GREEN);
+    const N: usize = 6; // number of objects
+    let s1 = Sphere::new(Vector3::new(-1.0, -0.5, -6.0), 0.5, RED);
+    let s2 = Sphere::new(Vector3::new(1.5, 0.5, -5.0), 1.5, BLUE);
+    let s3 = Sphere::new(Vector3::new(-1.5, -0.5, -3.0), 0.5, GREEN);
+    let s4 = Sphere::new(Vector3::new(0.0, -0.8, -2.5), 0.2, TEAL);
+    let s5 = Sphere::new(Vector3::new(1.5, -0.6, -3.0), 0.4, SKYBLUE);
 
     let p = InfPlane::new(
         Vector3::new(0.0, -1.0, -5.0),
         Normal::try_new(Vector3::new(0.0, 1.0, 0.0), NORM_EPS).unwrap(),
         LIGHTGRAY,
     );
-    let objects: [&dyn Hittable; N] = [&s2, &s1, &p, &s3];
+    let objects: [&dyn Hittable; N] = [&s2, &s1, &p, &s3, &s5, &s4];
 
     // Make lights in the scene:
     const M: usize = 2;

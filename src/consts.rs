@@ -14,3 +14,5 @@ pub const RED: Color = Color::new(0.9, 0.1, 0.1);
 pub const BLUE: Color = Color::new(0.1, 0.1, 0.9);
 pub const GREEN: Color = Color::new(0.1, 0.9, 0.1);
 pub const ORANGE: Color = Color::new(144.0/255.0, 12.0/255.0, 63.0/255.0);
+pub const TEAL: Color = Color::new(0.1, 0.9, 0.9);
+pub const VIOLET: Color = Color::new(0.95, 0.1, 0.95);

@@ -19,7 +19,7 @@ impl Ray {
     }
 
     pub fn reflect(&self, point: Point, normal: Normal) -> Ray {
-        let reflected_dir = *self.dir - 2.0 * normal * self.dir.dot(&normal);
+        let reflected_dir = *self.dir - 2.0 * *normal * self.dir.dot(&normal);
         Ray::new(point, reflected_dir)
     }
 }

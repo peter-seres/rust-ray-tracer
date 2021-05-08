@@ -1,4 +1,4 @@
-use crate::{Color, Normal, Point, Ray, Scalar, Vector3};
+use crate::{Color, Normal, Point, Ray, Scalar, Vector3, NORM_EPS};
 
 pub trait Hittable {
     fn get_normal(&self, p: Point) -> Normal;
@@ -41,7 +41,7 @@ impl InfPlane {
 
 impl Hittable for Sphere {
     fn get_normal(&self, p: Point) -> Normal {
-        p - self.origin
+        Normal::try_new(p - self.origin, NORM_EPS).unwrap()
     }
 
     fn intersect(&self, ray: &Ray) -> Option<(Scalar, Color, Normal)> {

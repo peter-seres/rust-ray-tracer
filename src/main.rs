@@ -17,9 +17,9 @@ pub use ray::Ray;
 pub use types::*;
 
 // Shader settings:
-const LAMBERT_INT: Scalar = 0.99;
+const LAMBERT_INT: Scalar = 0.8;
 const AMBIENT_INT: Scalar = 0.2;
-const REFLECTION_INT: Scalar = 0.5;
+const REFLECTION_INT: Scalar = 0.9;
 
 fn get_closest_intersection<const N: usize>(
     ray: Ray,
@@ -56,24 +56,28 @@ fn raycast<const N: usize, const M: usize>(
     return match get_closest_intersection(ray, hittables) {
         None => return (BLACK, None),
         Some((mut point, base_color, normal)) => {
-
-            // Shift point P along the normal vector to avoid shadow acne:
-            const BIAS: Scalar = 2e-4;
-            point = point + BIAS * normal;
             let mut color: Color = base_color * AMBIENT_INT;
+            
+            // Add Lambert shading and shadows from all lights
+            const BIAS: Scalar = 2e-2;
+            point = point + BIAS * *normal;  // Shifting along the bias against shadow acne
 
             for light in lights {
                 let vector_to_light = light.get_origin() - point;
-                let ray = Ray::new(point, vector_to_light);
-                match get_closest_intersection(ray, hittables) {
-                    Some(_) => continue,
+                let ray_to_light = Ray::new(point, vector_to_light);
+                match get_closest_intersection(ray_to_light, hittables) {
+                    Some(_) => continue,    // The ray to light hits something -> shadow, skip
                     None => {
+                        // The ray to light has no obstructions -> calculate intensity
                         let intensity: Scalar = light.get_intensity(point, normal);
                         color = color * (1.0 + intensity);
                     }
                 }
             }
-            (color, Some(ray.reflect(point, normal)))
+
+            // Return the resulting color and the reflected ray.
+            let reflected_ray = ray.reflect(point, normal);
+            (color, Some(reflected_ray))
         }
     };
 }
@@ -86,10 +90,10 @@ fn sample<const N: usize, const M: usize>(
 
     match raycast(ray, hittables, lights) {
         (color, None) => return color,
-        (mut color, Some(ray_reflected)) => {
-            let refl_color = match raycast(ray_reflected, hittables, lights) {
-                (c, None) => c,
-                (c, Some(_)) => c,
+        (mut color, Some(reflected_ray)) => {
+
+            let refl_color = match raycast(reflected_ray, hittables, lights) {
+                (c, _) => c,
             };
             color = color + refl_color * REFLECTION_INT;
             color
@@ -111,20 +115,22 @@ fn main() {
     let mut color_data = ColorData::new(vec![]);
 
     // Make objects in the scene:
-    const N: usize = 3; // number of objects
-    let s1 = Sphere::new(Vector3::new(-0.6, 0.0, -7.0), 0.5, RED);
+    const N: usize = 4; // number of objects
+    let s1 = Sphere::new(Vector3::new(-0.6, 0.0, -7.0), 0.7, RED);
     let s2 = Sphere::new(Vector3::new(1.3, 0.5, -5.0), 1.3, BLUE);
+    let s3 = Sphere::new(Vector3::new(-1.3, 0.0, -3.0), 0.4, GREEN);
+
     let p = InfPlane::new(
         Vector3::new(0.0, -1.0, -5.0),
-        Vector3::new(0.0, 1.0, 0.0),
+        Normal::try_new(Vector3::new(0.0, 1.0, 0.0), NORM_EPS).unwrap(),
         LIGHTGRAY,
     );
-    let objects: [&dyn Hittable; N] = [&s1, &s2, &p];
+    let objects: [&dyn Hittable; N] = [&s2, &s1, &p, &s3];
 
     // Make lights in the scene:
     const M: usize = 2;
     let l1 = PointLight::new(Vector3::new(-3.0, 2.0, -2.0), 10.0);
-    let l2 = PointLight::new(Vector3::new(3.0, 2.0, -2.0), 2.0);
+    let l2 = PointLight::new(Vector3::new(3.0, 6.0, -2.0), 13.0);
     let lights: [&dyn Light; M] = [&l1, &l2];
 
     // Iterate through the Camera, do ray tracing and gather the color data

@@ -22,14 +22,14 @@ impl Logger {
         println!(" {} ", text);
     }
 
-    fn info(&self, text: &str) {
+    pub fn info(&self, text: &str) {
         match self.loglevel {
             LogLevel::Info => {Logger::log(text)},
             _ => {}
         }
     }
 
-    fn warn(&self, text: &str) {
+    pub fn warn(&self, text: &str) {
         match self.loglevel {
             LogLevel::Info => {},
             LogLevel::Warning => {Logger::log(text)},
@@ -37,7 +37,7 @@ impl Logger {
         }
     }
 
-    fn error(&self, text: &str) {
+    pub fn error(&self, text: &str) {
         Logger::log(text);
     }
 }

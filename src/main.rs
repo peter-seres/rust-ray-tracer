@@ -16,6 +16,7 @@ pub use lights::{Light, PointLight};
 pub use ray::Ray;
 pub use types::*;
 pub use logger::{Logger, LogLevel};
+pub use time::{Instant};
 
 // Shader settings:
 const LAMBERT_INT: Scalar = 0.9;
@@ -104,13 +105,14 @@ fn sample<const N: usize, const M: usize>(
 
 
 fn main() {
-    // Set image resolution and ouput path:
-    // let width = 860;
-    // let height = 640;
 
+    // Logger:
+    let logger = Logger::new(LogLevel::Info);
+    logger.info("Setting up scene...");
+
+    // Set image resolution and ouput path:
     let width = 2 * 1920;
     let height = 2 * 1080;
-
     let file_path = r"output/traced.png";
 
     // Camera setup:
@@ -139,10 +141,19 @@ fn main() {
     let lights: [&dyn Light; M] = [&l1, &l2];
 
     // Iterate through the Camera, do ray tracing and gather the color data
+    logger.info("Starting iterations.");
+
+    let start = Instant::now();
     for ray in c {
         let c: Color = sample(ray, &objects, &lights);
         color_data.push(c);
     }
+    let end = Instant::now();
+
+    let duration = end - start;
+
+    logger.info("Ray Tracing finished.");
+    println!("Computation time {:?}", duration);
 
     // Save the color data to image
     let data = color_data.into_vec();

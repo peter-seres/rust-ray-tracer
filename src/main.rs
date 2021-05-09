@@ -29,8 +29,8 @@ const BACKWARD: Vector3 = Vector3::new(0.0, 0.0, 1.0);
 
 // Shader settings:
 const LAMBERT_INT: Scalar = 0.9;
-const AMBIENT_INT: Scalar = 0.15;
-const REFLECTION_INT: Scalar = 0.1;
+const AMBIENT_INT: Scalar = 0.1;
+const REFLECTION_INT: Scalar = 0.8;
 
 fn get_closest_intersection(
     ray: Ray,
@@ -103,10 +103,10 @@ fn sample(
         (color, None) => return color,
         (mut color, Some(reflected_ray)) => {
 
-            let refl_color = match raycast(reflected_ray, hittables, lights) {
-                (c, _) => c,
-            };
-            color = color + refl_color * REFLECTION_INT;
+            // let refl_color = match raycast(reflected_ray, hittables, lights) {
+            //     (c, _) => c,
+            // };
+            // color = color + refl_color * REFLECTION_INT;
             color
         }
     }
@@ -149,10 +149,13 @@ fn main() {
 
     // Make lights in the scene:
     let mut lights: Vec<Box<dyn Light>> = vec![];
-    let l1 = PointLight::new(Vector3::new(-3.0, 2.0, -2.0), 10.0);
-    let l2 = PointLight::new(Vector3::new(3.0, 6.0, -2.0), 13.0);
+    let l1 = PointLight::new(Vector3::new(-2.3, 2.3, -3.0), 10.0);
+    let l2 = PointLight::new(Vector3::new(3.0, 6.0, -2.0), 10.0);
+    let l3 = PointLight::new(Vector3::new(0.0, -0.7, -3.0), 10.0);
+
     lights.push(Box::new(l1));
     lights.push(Box::new(l2));
+    lights.push(Box::new(l3));
 
     // Iterate through the Camera, do ray tracing and gather the color data
     logger.info("Starting iterations.");

@@ -28,6 +28,10 @@ impl Light for PointLight {
         let distance: Scalar = vector_to_light.norm();
         let intensity: Scalar = self.strength / (distance * distance);
         let lambert_intensity: Scalar = intensity * LAMBERT_INT * vector_to_light.dot(&normal);
-        lambert_intensity
+        if lambert_intensity > 0.0 {
+            lambert_intensity
+        } else {
+            0.0
+        }
     }
 }

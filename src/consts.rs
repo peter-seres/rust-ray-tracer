@@ -20,4 +20,4 @@ pub const ORANGE: Color = Color::new(1.0, 0.6, 0.0);
 pub const TEAL: Color = Color::new(0.1, 0.9, 0.9);
 pub const VIOLET: Color = Color::new(0.95, 0.1, 0.95);
 pub const GOLD: Color = Color::new(1.0, 0.85, 0.95);
-pub const PINK: Color = Color::new(99.0/255.0, 198.0/255.0, 100.0/255.0);
+pub const PINK: Color = Color::new(1.0, 0.75, 0.8);

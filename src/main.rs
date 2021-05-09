@@ -29,8 +29,8 @@ const BACKWARD: Vector3 = Vector3::new(0.0, 0.0, 1.0);
 
 // Shader settings:
 const LAMBERT_INT: Scalar = 1.0;
-const AMBIENT_INT: Scalar = 0.1;
-const REFLECTION_INT: Scalar = 0.8;
+const AMBIENT_INT: Scalar = 0.0;
+const REFLECTION_INT: Scalar = 0.0;
 const LAMBERT_BIAS: Scalar = 2e-2;
 
 struct Hit {
@@ -78,7 +78,9 @@ fn trace(
     return match raycast(ray, hittables) {
         None => return (BLACK, None),
         Some(mut hit) => {
-            hit.color = hit.color * AMBIENT_INT;
+            let mut output_color = BLACK;
+
+            output_color = output_color + hit.color * AMBIENT_INT;
 
             // Shifting along the bias against shadow acne
             hit.point = hit.point + LAMBERT_BIAS * *hit.normal;
@@ -103,20 +105,20 @@ fn trace(
                     Some(hit_towards_light) => {
                         // The ray to light has no obstructions -> calculate intensity
                         if hit_towards_light.distance > distance_to_light {
-                            hit.color = hit.color * (1.0 + intensity);
+                            output_color = output_color + hit.color * intensity;
                         }
                     },
 
                     None => {
                         // The ray to light has no obstructions -> calculate intensity
-                        hit.color = hit.color * (1.0 + intensity);
+                        output_color = output_color + hit.color * intensity;
                     },
                 }
             }
 
             // Return the resulting color and the reflected ray.
             let reflected_ray = ray.reflect(hit.point, hit.normal);
-            (hit.color, Some(reflected_ray))
+            (output_color, Some(reflected_ray))
         }
     };
 }
@@ -131,10 +133,10 @@ fn sample(
         (color, None) => return color,
         (mut color, Some(reflected_ray)) => {
 
-            // let refl_color = match raycast(reflected_ray, hittables, lights) {
-            //     (c, _) => c,
-            // };
-            // color = color + refl_color * REFLECTION_INT;
+            let refl_color = match trace(reflected_ray, hittables, lights) {
+                (color, _) => color
+            };
+            color = color + refl_color * REFLECTION_INT;
             color
         }
     }
@@ -164,7 +166,7 @@ fn main() {
     let s2 = Sphere::new(Vector3::new(1.5, 0.5, -5.0), 1.5, BLUE);
     let s3 = Sphere::new(Vector3::new(-1.5, -0.5, -3.0), 0.5, GREEN);
     let s4 = Sphere::new(Vector3::new(0.0, -0.8, -2.5), 0.2, TEAL);
-    let s5 = Sphere::new(Vector3::new(1.5, -0.6, -3.0), 0.4, PINK);
+    let s5 = Sphere::new(Vector3::new(0.8, -0.6, -3.0), 0.4, PINK);
 
     // Object list of heap pointers:
     let mut objects: Vec<Box<dyn Hittable>> = vec![];
@@ -179,7 +181,7 @@ fn main() {
     let mut lights: Vec<Box<dyn Light>> = vec![];
     let l1 = PointLight::new(Vector3::new(-2.3, 2.3, -3.0), 10.0);
     let l2 = PointLight::new(Vector3::new(3.0, 6.0, -2.0), 10.0);
-    let l3 = PointLight::new(Vector3::new(0.0, -0.7, -3.0), 5.0);
+    let l3 = PointLight::new(Vector3::new(0.0, -0.7, -3.0), 1.0);
 
     // lights.push(Box::new(l1));
     // lights.push(Box::new(l2));

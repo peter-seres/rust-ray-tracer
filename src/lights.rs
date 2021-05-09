@@ -1,10 +1,10 @@
-use crate::{Normal, Point, Scalar, Vector3, LAMBERT_INT};
+use crate::{Point, Scalar};
 
 pub type LightList = [Box<dyn Light>];
 
 pub trait Light {
     fn get_origin(&self) -> Point;
-    fn get_intensity(&self, point: Point, normal: Normal) -> Scalar;
+    fn get_strength(&self) -> Scalar;
 }
 
 pub struct PointLight {
@@ -23,15 +23,7 @@ impl Light for PointLight {
         self.origin
     }
 
-    fn get_intensity(&self, point: Point, normal: Normal) -> Scalar {
-        let vector_to_light: Vector3 = self.origin - point;
-        let distance: Scalar = vector_to_light.norm();
-        let intensity: Scalar = self.strength / (distance * distance);
-        let lambert_intensity: Scalar = intensity * LAMBERT_INT * vector_to_light.dot(&normal);
-        if lambert_intensity > 0.0 {
-            lambert_intensity
-        } else {
-            0.0
-        }
+    fn get_strength(&self) -> Scalar {
+        self.strength
     }
 }

@@ -7,9 +7,25 @@ pub struct Color {
     b: Scalar,
 }
 
+fn u8_to_scalar(x: u8) -> Scalar{
+    x as Scalar / u8::MAX as Scalar
+}
+
 impl Color {
     pub const fn new(r: Scalar, g: Scalar, b: Scalar) -> Self {
         Color { r, g, b }
+    }
+
+    pub fn from_rgb(r: u8, g: u8, b: u8) -> Self {
+        Color {
+            r: u8_to_scalar(r),
+            g: u8_to_scalar(g),
+            b: u8_to_scalar(b)
+        }
+    }
+
+    pub fn from_hex(hexcode: &str) -> Self {
+        hex_to_rgb(hexcode).unwrap()
     }
 
     fn float_to_u8(x: Scalar) -> u8 {
@@ -101,6 +117,26 @@ impl ColorData {
         self.data
     }
 }
+
+fn hex_byte_to_scalar(h: &str) -> Scalar{
+    u8::from_str_radix(h, 16).unwrap() as Scalar / u8::MAX as Scalar
+}
+
+fn hex_to_rgb(hexcode: &str) -> Result<Color, &str>{
+
+    if hexcode.starts_with("#") && (hexcode.len() == 7) {
+
+        let r = hex_byte_to_scalar(&hexcode[1..3]);
+        let g = hex_byte_to_scalar(&hexcode[3..5]);
+        let b = hex_byte_to_scalar(&hexcode[5..7]);
+
+        let color = Color::new(r, g, b);
+        Ok(color)
+    } else {
+        Err("Hexcode must start with # and have 6 follow-up characters. Example: #FFFFFF")
+    }
+}
+
 
 #[cfg(test)]
 mod test {

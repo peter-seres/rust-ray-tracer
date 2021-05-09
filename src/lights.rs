@@ -1,5 +1,7 @@
 use crate::{Normal, Point, Scalar, Vector3, LAMBERT_INT};
 
+pub type LightList = [Box<dyn Light>];
+
 pub trait Light {
     fn get_origin(&self) -> Point;
     fn get_intensity(&self, point: Point, normal: Normal) -> Scalar;

@@ -1,4 +1,6 @@
-use crate::{Color, Normal, Point, Ray, Scalar, Vector3, NORM_EPS};
+use crate::{Color, Normal, Point, Ray, Scalar, NORM_EPS, Vector3};
+
+pub type ObjectList = [Box<dyn Hittable>];
 
 pub trait Hittable {
     fn get_normal(&self, p: Point) -> Normal;
@@ -12,7 +14,7 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(origin: Vector3, radius: Scalar, color: Color) -> Self {
+    pub fn new(origin: Point, radius: Scalar, color: Color) -> Self {
         Self {
             origin,
             radius,
@@ -30,10 +32,10 @@ pub struct InfPlane {
 impl InfPlane {
     pub const HIT_EPS: Scalar = 1e-4;
 
-    pub fn new(origin: Vector3, normal: Normal, color: Color) -> Self {
+    pub fn new(origin: Point, normal: Vector3, color: Color) -> Self {
         Self {
             origin,
-            normal,
+            normal: Normal::try_new(normal, NORM_EPS).unwrap(),
             color,
         }
     }

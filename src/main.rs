@@ -6,26 +6,35 @@ mod image;
 mod lights;
 mod ray;
 mod types;
+mod material;
 
 pub use camera::Camera;
 pub use color::{Color, ColorData};
 pub use consts::*;
-pub use hittables::{Hittable, InfPlane, Sphere};
+pub use hittables::{ObjectList, Hittable, InfPlane, Sphere};
 pub use image::Image;
-pub use lights::{Light, PointLight};
+pub use lights::{LightList, Light, PointLight};
 pub use ray::Ray;
 pub use types::*;
 pub use logger::{Logger, LogLevel};
 pub use time::{Instant};
 
+const ORIGIN: Point = Point::new(0.0, 0.0, 0.0);
+const UP: Vector3 = Vector3::new(0.0, 1.0, 0.0);
+const DOWN: Vector3 = Vector3::new(0.0, -1.0, 0.0);
+const RIGHT: Vector3 = Vector3::new(1.0, 0.0, 0.0);
+const LEFT: Vector3 = Vector3::new(-1.0, 0.0, 0.0);
+const FORWARD: Vector3 = Vector3::new(0.0, 0.0, -1.0);
+const BACKWARD: Vector3 = Vector3::new(0.0, 0.0, 1.0);
+
 // Shader settings:
 const LAMBERT_INT: Scalar = 0.9;
 const AMBIENT_INT: Scalar = 0.15;
-const REFLECTION_INT: Scalar = 0.6;
+const REFLECTION_INT: Scalar = 0.1;
 
-fn get_closest_intersection<const N: usize>(
+fn get_closest_intersection(
     ray: Ray,
-    hittables: &[&dyn Hittable; N],
+    hittables: &ObjectList,
 ) -> Option<(Point, Color, Normal)> {
     let mut hit: (Scalar, Option<(Color, Normal)>) = (1e3, None);
 
@@ -48,10 +57,10 @@ fn get_closest_intersection<const N: usize>(
 }
 
 
-fn raycast<const N: usize, const M: usize>(
+fn raycast(
     ray: Ray,
-    hittables: &[&dyn Hittable; N],
-    lights: &[&dyn Light; M],
+    hittables: &ObjectList,
+    lights: &LightList,
 ) -> (Color, Option<Ray>) {
 
     // Find the closest hit for a raycast.
@@ -84,10 +93,10 @@ fn raycast<const N: usize, const M: usize>(
     };
 }
 
-fn sample<const N: usize, const M: usize>(
+fn sample(
     ray: Ray,
-    hittables: &[&dyn Hittable; N],
-    lights: &[&dyn Light; M],
+    hittables: &ObjectList,
+    lights: &LightList,
 ) -> Color {
 
     match raycast(ray, hittables, lights) {
@@ -122,25 +131,28 @@ fn main() {
     let mut color_data = ColorData::new(vec![]);
 
     // Make objects in the scene:
-    const N: usize = 6; // number of objects
+    let p = InfPlane::new(Vector3::new(0.0, -1.0, 0.0), UP,LIGHTGRAY);
     let s1 = Sphere::new(Vector3::new(-1.0, -0.5, -6.0), 0.5, RED);
     let s2 = Sphere::new(Vector3::new(1.5, 0.5, -5.0), 1.5, BLUE);
     let s3 = Sphere::new(Vector3::new(-1.5, -0.5, -3.0), 0.5, GREEN);
     let s4 = Sphere::new(Vector3::new(0.0, -0.8, -2.5), 0.2, TEAL);
-    let s5 = Sphere::new(Vector3::new(1.5, -0.6, -3.0), 0.4, SKYBLUE);
+    let s5 = Sphere::new(Vector3::new(1.5, -0.6, -3.0), 0.4, PINK);
 
-    let p = InfPlane::new(
-        Vector3::new(0.0, -1.0, -5.0),
-        Normal::try_new(Vector3::new(0.0, 1.0, 0.0), NORM_EPS).unwrap(),
-        LIGHTGRAY,
-    );
-    let objects: [&dyn Hittable; N] = [&s2, &s1, &p, &s3, &s5, &s4];
+    // Object list of heap pointers:
+    let mut objects: Vec<Box<dyn Hittable>> = vec![];
+    objects.push(Box::new(p));
+    objects.push(Box::new(s1));
+    objects.push(Box::new(s2));
+    objects.push(Box::new(s3));
+    objects.push(Box::new(s4));
+    objects.push(Box::new(s5));
 
     // Make lights in the scene:
-    const M: usize = 2;
+    let mut lights: Vec<Box<dyn Light>> = vec![];
     let l1 = PointLight::new(Vector3::new(-3.0, 2.0, -2.0), 10.0);
     let l2 = PointLight::new(Vector3::new(3.0, 6.0, -2.0), 13.0);
-    let lights: [&dyn Light; M] = [&l1, &l2];
+    lights.push(Box::new(l1));
+    lights.push(Box::new(l2));
 
     // Iterate through the Camera, do ray tracing and gather the color data
     logger.info("Starting iterations.");

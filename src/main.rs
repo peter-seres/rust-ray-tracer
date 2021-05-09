@@ -28,10 +28,10 @@ const FORWARD: Vector3 = Vector3::new(0.0, 0.0, -1.0);
 const BACKWARD: Vector3 = Vector3::new(0.0, 0.0, 1.0);
 
 // Shader settings:
-const LAMBERT_INT: Scalar = 1.0;
+const LAMBERT_INT: Scalar = 0.8;
 const AMBIENT_INT: Scalar = 0.0;
-const REFLECTION_INT: Scalar = 0.0;
-const LAMBERT_BIAS: Scalar = 2e-2;
+const REFLECTION_INT: Scalar = 0.2;
+const SHADOW_BIAS: Scalar = 1e-3;
 
 struct Hit {
     point: Point,
@@ -83,7 +83,7 @@ fn trace(
             output_color = output_color + hit.color * AMBIENT_INT;
 
             // Shifting along the bias against shadow acne
-            hit.point = hit.point + LAMBERT_BIAS * *hit.normal;
+            hit.point = hit.point + SHADOW_BIAS * *hit.normal;
 
             // Find shadows
             for light in lights {
@@ -105,13 +105,13 @@ fn trace(
                     Some(hit_towards_light) => {
                         // The ray to light has no obstructions -> calculate intensity
                         if hit_towards_light.distance > distance_to_light {
-                            output_color = output_color + hit.color * intensity;
+                            output_color = output_color + hit.color * lambert_intensity;
                         }
                     },
 
                     None => {
                         // The ray to light has no obstructions -> calculate intensity
-                        output_color = output_color + hit.color * intensity;
+                        output_color = output_color + hit.color * lambert_intensity;
                     },
                 }
             }
@@ -165,7 +165,7 @@ fn main() {
     let s1 = Sphere::new(Vector3::new(-1.0, 0.0, -5.0), 1.0, RED);
     let s2 = Sphere::new(Vector3::new(1.5, 0.5, -5.0), 1.5, BLUE);
     let s3 = Sphere::new(Vector3::new(-1.5, -0.5, -3.0), 0.5, GREEN);
-    let s4 = Sphere::new(Vector3::new(0.0, -0.8, -2.5), 0.2, TEAL);
+    let s4 = Sphere::new(Vector3::new(0.0, -0.82, -2.5), 0.2, TEAL);
     let s5 = Sphere::new(Vector3::new(0.8, -0.6, -3.0), 0.4, PINK);
 
     // Object list of heap pointers:

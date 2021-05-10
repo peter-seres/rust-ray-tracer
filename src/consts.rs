@@ -1,4 +1,4 @@
-use crate::{Color, Scalar};
+use crate::{Color, Scalar, Vector3, Point};
 
 // Common constants:
 pub const PI: Scalar = std::f64::consts::PI;
@@ -21,3 +21,12 @@ pub const TEAL: Color = Color::new(0.1, 0.9, 0.9);
 pub const VIOLET: Color = Color::new(0.95, 0.1, 0.95);
 pub const GOLD: Color = Color::new(1.0, 0.85, 0.95);
 pub const PINK: Color = Color::new(1.0, 0.75, 0.8);
+
+// Directions:
+pub const ORIGIN: Point = Point::new(0.0, 0.0, 0.0);
+pub const UP: Vector3 = Vector3::new(0.0, 1.0, 0.0);
+pub const DOWN: Vector3 = Vector3::new(0.0, -1.0, 0.0);
+pub const RIGHT: Vector3 = Vector3::new(1.0, 0.0, 0.0);
+pub const LEFT: Vector3 = Vector3::new(-1.0, 0.0, 0.0);
+pub const FORWARD: Vector3 = Vector3::new(0.0, 0.0, -1.0);
+pub const BACKWARD: Vector3 = Vector3::new(0.0, 0.0, 1.0);

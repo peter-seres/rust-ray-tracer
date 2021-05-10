@@ -7,6 +7,7 @@ mod lights;
 mod material;
 mod ray;
 mod types;
+mod scene;
 
 pub use camera::Camera;
 pub use color::{Color, ColorData};
@@ -17,47 +18,15 @@ pub use lights::{Light, PointLight};
 pub use ray::Ray;
 pub use time::Instant;
 pub use types::*;
-
-const ORIGIN: Point = Point::new(0.0, 0.0, 0.0);
-const UP: Vector3 = Vector3::new(0.0, 1.0, 0.0);
-const DOWN: Vector3 = Vector3::new(0.0, -1.0, 0.0);
-const RIGHT: Vector3 = Vector3::new(1.0, 0.0, 0.0);
-const LEFT: Vector3 = Vector3::new(-1.0, 0.0, 0.0);
-const FORWARD: Vector3 = Vector3::new(0.0, 0.0, -1.0);
-const BACKWARD: Vector3 = Vector3::new(0.0, 0.0, 1.0);
+pub use scene::{Scene, ObjectList, LightList};
 
 // Shader settings:
 const LAMBERT_INT: Scalar = 0.8;
 const AMBIENT_INT: Scalar = 0.0;
 const REFLECTION_INT: Scalar = 0.2;
-const SHADOW_BIAS: Scalar = 1e-3;
-
-pub type ObjectList = Vec<Box<dyn Hittable>>;
-pub type LightList = Vec<Box<dyn Light>>;
-
-struct Scene {
-    camera: Camera,
-    objects: ObjectList,
-    lights: LightList,
-}
-
-impl Scene {
-    fn new(camera: Camera) -> Self {
-        Self {
-            camera,
-            objects: vec![],
-            lights: vec![],
-        }
-    }
-
-    fn push_object(&mut self, obj: Box<dyn Hittable>) {
-        self.objects.push(obj);
-    }
-
-    fn push_light(&mut self, light: Box<dyn Light>) {
-        self.lights.push(light);
-    }
-}
+const SHADOW_BIAS: Scalar = 2e-3;
+const RECURSION_DEPTH: usize = 2;
+const RAY_MAX_DIST: Scalar = 1e3;
 
 struct Hit {
     point: Point,
@@ -66,9 +35,8 @@ struct Hit {
     distance: Scalar,
 }
 
-/// Return the location, color and normal vector of the first object that a ray hits.
 fn raycast(ray: Ray, hittables: &ObjectList) -> Option<Hit> {
-    let mut hit: (Scalar, Option<(Color, Normal)>) = (1e3, None);
+    let mut hit: (Scalar, Option<(Color, Normal)>) = (RAY_MAX_DIST, None);
 
     for h in hittables {
         match h.intersect(&ray) {
@@ -93,17 +61,23 @@ fn raycast(ray: Ray, hittables: &ObjectList) -> Option<Hit> {
     };
 }
 
-fn trace(ray: Ray, hittables: &ObjectList, lights: &LightList) -> (Color, Option<Ray>) {
+fn trace(ray: Ray, hittables: &ObjectList, lights: &LightList, depth: usize) -> Color {
+
+    // If we reached max depth -> return
+    if depth <= 0 {
+        return BLACK;
+    }
+
     // Find the closest hit for a raycast.
     return match raycast(ray, hittables) {
-        None => return (BLACK, None),
+        None => BLACK,
         Some(mut hit) => {
             let mut output_color = BLACK;
 
             output_color = output_color + hit.color * AMBIENT_INT;
 
             // Shifting along the bias against shadow acne
-            // hit.point = hit.point + SHADOW_BIAS * *hit.normal;
+            hit.point = hit.point + SHADOW_BIAS * *hit.normal;
 
             // Find shadows
             for light in lights {
@@ -112,14 +86,15 @@ fn trace(ray: Ray, hittables: &ObjectList, lights: &LightList) -> (Color, Option
                 let unit_to_light = Unit::try_new(vector_to_light, NORM_EPS).unwrap();
 
                 // Shifting along the bias against shadow acne
-                hit.point = hit.point + SHADOW_BIAS * *unit_to_light;
+                // let p = hit.point + SHADOW_BIAS * *unit_to_light;
 
                 let vector_to_light: Vector3 = light.get_origin() - hit.point;
                 let distance_to_light: Scalar = vector_to_light.norm();
                 let ray_to_light = Ray::new(hit.point, vector_to_light);
 
                 let intensity: Scalar =
-                    light.get_strength() / (distance_to_light * distance_to_light);
+                    light.get_strength() / distance_to_light.powi(2);
+
                 let mut lambert_intensity: Scalar =
                     intensity * LAMBERT_INT * vector_to_light.dot(&hit.normal);
 
@@ -143,30 +118,19 @@ fn trace(ray: Ray, hittables: &ObjectList, lights: &LightList) -> (Color, Option
                 }
             }
 
-            // Return the resulting color and the reflected ray.
+            // Do a reflection:
             let reflected_ray = ray.reflect(hit.point, hit.normal);
-            (output_color, Some(reflected_ray))
+            let refl_color = trace(reflected_ray, hittables, lights, depth-1);
+            output_color = output_color + refl_color * REFLECTION_INT;
+            output_color
         }
     };
 }
 
-fn sample(ray: Ray, hittables: &ObjectList, lights: &LightList) -> Color {
-    match trace(ray, hittables, lights) {
-        (color, None) => return color,
-        (mut color, Some(reflected_ray)) => {
-            let refl_color = match trace(reflected_ray, hittables, lights) {
-                (color, _) => color,
-            };
-            color = color + refl_color * REFLECTION_INT;
-            color
-        }
-    }
-}
-
 fn main() {
     // Set image resolution and ouput path:
-    let width = 4 * 1920 / 20;
-    let height = 4 * 1080 / 20;
+    let width = 2 * 1920;
+    let height = 2 * 1080;
     let file_path = r"output/traced.png";
 
     // Camera setup:
@@ -175,40 +139,16 @@ fn main() {
     // Data allocation into Vector:
     let mut color_data = ColorData::new(vec![]);
 
-    // Make scene:
-    let mut scene = Scene::new(c);
-
-    // Make objects in the scene:
-    let p = InfPlane::new(Vector3::new(0.0, -1.0, 0.0), UP, LIGHTGRAY);
-
-    let s1 = Sphere::new(Vector3::new(-1.0, 0.0, -5.0), 1.0, RED);
-    let s2 = Sphere::new(Vector3::new(1.5, 0.5, -5.0), 1.5, BLUE);
-    let s3 = Sphere::new(Vector3::new(-1.5, -0.5, -3.0), 0.5, GREEN);
-    let s4 = Sphere::new(Vector3::new(0.0, -0.82, -2.5), 0.2, TEAL);
-    let s5 = Sphere::new(Vector3::new(0.8, -0.6, -3.0), 0.4, PINK);
-
-    let l1 = PointLight::new(Vector3::new(-2.0, 3.3, -1.0), 5.0);
-    let l2 = PointLight::new(Vector3::new(0.0, -0.7, -3.0), 1.0);
-
-    scene.push_object(Box::new(p));
-    scene.push_object(Box::new(s1));
-    scene.push_object(Box::new(s2));
-    scene.push_object(Box::new(s3));
-    scene.push_object(Box::new(s4));
-    scene.push_object(Box::new(s5));
-
-    scene.push_light(Box::new(l1));
-    scene.push_light(Box::new(l2));
+    // Default scene setup:
+    let scene = Scene::default_scene(c);
 
     // Iterate through the Camera, do ray tracing and gather the color data
     println!("Starting iterations.");
-
     let start = Instant::now();
     for ray in scene.camera {
-        let c: Color = sample(ray, &scene.objects, &scene.lights);
+        let c: Color = trace(ray, &scene.objects, &scene.lights, RECURSION_DEPTH);
         color_data.push(c);
     }
-
     println!("Ray Tracing finished. Computation time {:?}", Instant::now() - start);
 
     // Save the color data to image

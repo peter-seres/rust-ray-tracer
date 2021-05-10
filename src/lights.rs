@@ -11,8 +11,8 @@ pub struct PointLight {
 }
 
 impl PointLight {
-    pub fn new(origin: Point, strength: Scalar) -> Self {
-        Self { origin, strength }
+    pub fn new(origin: Point, strength: Scalar) -> Box<Self> {
+        Box::new(Self { origin, strength })
     }
 }
 

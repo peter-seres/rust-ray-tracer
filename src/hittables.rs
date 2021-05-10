@@ -12,12 +12,12 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(origin: Point, radius: Scalar, color: Color) -> Self {
-        Self {
+    pub fn new(origin: Point, radius: Scalar, color: Color) -> Box<Self> {
+        Box::new(Self {
             origin,
             radius,
             color,
-        }
+        })
     }
 }
 
@@ -30,12 +30,12 @@ pub struct InfPlane {
 impl InfPlane {
     pub const HIT_EPS: Scalar = 1e-4;
 
-    pub fn new(origin: Point, normal: Vector3, color: Color) -> Self {
-        Self {
+    pub fn new(origin: Point, normal: Vector3, color: Color) -> Box<Self> {
+        Box::new(Self {
             origin,
             normal: Normal::try_new(normal, NORM_EPS).unwrap(),
             color,
-        }
+        })
     }
 }
 

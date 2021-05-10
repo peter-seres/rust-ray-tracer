@@ -7,7 +7,6 @@ edition = "2018"
 [dependencies]
 png = "0.16.8"
 nalgebra = "0.26.2"
-logger = { path = "src/logger"}
 time = "*"
 
 [profile.dev]

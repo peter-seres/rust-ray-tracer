@@ -1,4 +1,4 @@
-use crate::{Point, Scalar, Unit, Vector3, NORM_EPS, Normal};
+use crate::{Normal, Point, Scalar, Unit, Vector3, NORM_EPS};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Ray {

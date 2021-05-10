@@ -1,4 +1,4 @@
-use crate::{Scalar, Color};
+use crate::{Color, Scalar};
 
 // Common constants:
 pub const PI: Scalar = std::f64::consts::PI;

@@ -1,7 +1,5 @@
 use crate::{Point, Scalar};
 
-pub type LightList = [Box<dyn Light>];
-
 pub trait Light {
     fn get_origin(&self) -> Point;
     fn get_strength(&self) -> Scalar;

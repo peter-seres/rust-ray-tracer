@@ -1,3 +1,3 @@
-// use crate::{Vector3, Scalar, Normal};
+use crate::{Normal, Scalar, Vector3};
 
 pub trait Material {}

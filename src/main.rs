@@ -4,20 +4,19 @@ mod consts;
 mod hittables;
 mod image;
 mod lights;
+mod material;
 mod ray;
 mod types;
-mod material;
 
 pub use camera::Camera;
 pub use color::{Color, ColorData};
 pub use consts::*;
-pub use hittables::{ObjectList, Hittable, InfPlane, Sphere};
+pub use hittables::{Hittable, InfPlane, Sphere};
 pub use image::Image;
-pub use lights::{LightList, Light, PointLight};
+pub use lights::{Light, PointLight};
 pub use ray::Ray;
+pub use time::Instant;
 pub use types::*;
-pub use logger::{Logger, LogLevel};
-pub use time::{Instant};
 
 const ORIGIN: Point = Point::new(0.0, 0.0, 0.0);
 const UP: Vector3 = Vector3::new(0.0, 1.0, 0.0);
@@ -33,11 +32,38 @@ const AMBIENT_INT: Scalar = 0.0;
 const REFLECTION_INT: Scalar = 0.2;
 const SHADOW_BIAS: Scalar = 1e-3;
 
+pub type ObjectList = Vec<Box<dyn Hittable>>;
+pub type LightList = Vec<Box<dyn Light>>;
+
+struct Scene {
+    camera: Camera,
+    objects: ObjectList,
+    lights: LightList,
+}
+
+impl Scene {
+    fn new(camera: Camera) -> Self {
+        Self {
+            camera,
+            objects: vec![],
+            lights: vec![],
+        }
+    }
+
+    fn push_object(&mut self, obj: Box<dyn Hittable>) {
+        self.objects.push(obj);
+    }
+
+    fn push_light(&mut self, light: Box<dyn Light>) {
+        self.lights.push(light);
+    }
+}
+
 struct Hit {
     point: Point,
     color: Color,
     normal: Normal,
-    distance: Scalar
+    distance: Scalar,
 }
 
 /// Return the location, color and normal vector of the first object that a ray hits.
@@ -58,22 +84,16 @@ fn raycast(ray: Ray, hittables: &ObjectList) -> Option<Hit> {
 
     return match hit.1 {
         None => None,
-        Some((color, normal)) => Some( Hit {
+        Some((color, normal)) => Some(Hit {
             point: ray.at_distance(hit.0),
             color,
             normal,
-            distance: hit.0
+            distance: hit.0,
         }),
     };
 }
 
-
-fn trace(
-    ray: Ray,
-    hittables: &ObjectList,
-    lights: &LightList,
-) -> (Color, Option<Ray>) {
-
+fn trace(ray: Ray, hittables: &ObjectList, lights: &LightList) -> (Color, Option<Ray>) {
     // Find the closest hit for a raycast.
     return match raycast(ray, hittables) {
         None => return (BLACK, None),
@@ -87,7 +107,6 @@ fn trace(
 
             // Find shadows
             for light in lights {
-
                 let vector_to_light: Vector3 = light.get_origin() - hit.point;
 
                 let unit_to_light = Unit::try_new(vector_to_light, NORM_EPS).unwrap();
@@ -99,27 +118,28 @@ fn trace(
                 let distance_to_light: Scalar = vector_to_light.norm();
                 let ray_to_light = Ray::new(hit.point, vector_to_light);
 
-                let intensity: Scalar = light.get_strength() / (distance_to_light * distance_to_light);
-                let mut lambert_intensity: Scalar = intensity * LAMBERT_INT * vector_to_light.dot(&hit.normal);
+                let intensity: Scalar =
+                    light.get_strength() / (distance_to_light * distance_to_light);
+                let mut lambert_intensity: Scalar =
+                    intensity * LAMBERT_INT * vector_to_light.dot(&hit.normal);
 
                 if lambert_intensity < 0.0 {
                     lambert_intensity = 0.0;
                 }
 
                 match raycast(ray_to_light, hittables) {
-
                     // The ray to light hits something -> check distance to skip or not
                     Some(hit_towards_light) => {
                         // The ray to light has no obstructions -> calculate intensity
                         if hit_towards_light.distance > distance_to_light {
                             output_color = output_color + hit.color * lambert_intensity;
                         }
-                    },
+                    }
 
                     None => {
                         // The ray to light has no obstructions -> calculate intensity
                         output_color = output_color + hit.color * lambert_intensity;
-                    },
+                    }
                 }
             }
 
@@ -130,18 +150,12 @@ fn trace(
     };
 }
 
-fn sample(
-    ray: Ray,
-    hittables: &ObjectList,
-    lights: &LightList,
-) -> Color {
-
+fn sample(ray: Ray, hittables: &ObjectList, lights: &LightList) -> Color {
     match trace(ray, hittables, lights) {
         (color, None) => return color,
         (mut color, Some(reflected_ray)) => {
-
             let refl_color = match trace(reflected_ray, hittables, lights) {
-                (color, _) => color
+                (color, _) => color,
             };
             color = color + refl_color * REFLECTION_INT;
             color
@@ -149,16 +163,10 @@ fn sample(
     }
 }
 
-
 fn main() {
-
-    // Logger:
-    let logger = Logger::new(LogLevel::Info);
-    logger.info("Setting up scene...");
-
     // Set image resolution and ouput path:
-    let width = 4 * 1920;
-    let height = 4 * 1080;
+    let width = 4 * 1920 / 20;
+    let height = 4 * 1080 / 20;
     let file_path = r"output/traced.png";
 
     // Camera setup:
@@ -167,47 +175,41 @@ fn main() {
     // Data allocation into Vector:
     let mut color_data = ColorData::new(vec![]);
 
+    // Make scene:
+    let mut scene = Scene::new(c);
+
     // Make objects in the scene:
-    let p = InfPlane::new(Vector3::new(0.0, -1.0, 0.0), UP,LIGHTGRAY);
+    let p = InfPlane::new(Vector3::new(0.0, -1.0, 0.0), UP, LIGHTGRAY);
+
     let s1 = Sphere::new(Vector3::new(-1.0, 0.0, -5.0), 1.0, RED);
     let s2 = Sphere::new(Vector3::new(1.5, 0.5, -5.0), 1.5, BLUE);
     let s3 = Sphere::new(Vector3::new(-1.5, -0.5, -3.0), 0.5, GREEN);
     let s4 = Sphere::new(Vector3::new(0.0, -0.82, -2.5), 0.2, TEAL);
     let s5 = Sphere::new(Vector3::new(0.8, -0.6, -3.0), 0.4, PINK);
 
-    // Object list of heap pointers:
-    let mut objects: Vec<Box<dyn Hittable>> = vec![];
-    objects.push(Box::new(p));
-    objects.push(Box::new(s1));
-    objects.push(Box::new(s2));
-    objects.push(Box::new(s3));
-    objects.push(Box::new(s4));
-    objects.push(Box::new(s5));
+    let l1 = PointLight::new(Vector3::new(-2.0, 3.3, -1.0), 5.0);
+    let l2 = PointLight::new(Vector3::new(0.0, -0.7, -3.0), 1.0);
 
-    // Make lights in the scene:
-    let mut lights: Vec<Box<dyn Light>> = vec![];
-    let l1 = PointLight::new(Vector3::new(-2.3, 2.3, -3.0), 10.0);
-    let l2 = PointLight::new(Vector3::new(3.0, 6.0, -2.0), 10.0);
-    let l3 = PointLight::new(Vector3::new(0.0, -0.7, -3.0), 1.0);
+    scene.push_object(Box::new(p));
+    scene.push_object(Box::new(s1));
+    scene.push_object(Box::new(s2));
+    scene.push_object(Box::new(s3));
+    scene.push_object(Box::new(s4));
+    scene.push_object(Box::new(s5));
 
-    // lights.push(Box::new(l1));
-    // lights.push(Box::new(l2));
-    lights.push(Box::new(l3));
+    scene.push_light(Box::new(l1));
+    scene.push_light(Box::new(l2));
 
     // Iterate through the Camera, do ray tracing and gather the color data
-    logger.info("Starting iterations.");
+    println!("Starting iterations.");
 
     let start = Instant::now();
-    for ray in c {
-        let c: Color = sample(ray, &objects, &lights);
+    for ray in scene.camera {
+        let c: Color = sample(ray, &scene.objects, &scene.lights);
         color_data.push(c);
     }
-    let end = Instant::now();
 
-    let duration = end - start;
-
-    logger.info("Ray Tracing finished.");
-    println!("Computation time {:?}", duration);
+    println!("Ray Tracing finished. Computation time {:?}", Instant::now() - start);
 
     // Save the color data to image
     let data = color_data.into_vec();

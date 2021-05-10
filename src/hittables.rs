@@ -1,6 +1,4 @@
-use crate::{Color, Normal, Point, Ray, Scalar, NORM_EPS, Vector3};
-
-pub type ObjectList = [Box<dyn Hittable>];
+use crate::{Color, Normal, Point, Ray, Scalar, Vector3, NORM_EPS};
 
 pub trait Hittable {
     fn get_normal(&self, p: Point) -> Normal;

@@ -83,10 +83,17 @@ fn trace(
             output_color = output_color + hit.color * AMBIENT_INT;
 
             // Shifting along the bias against shadow acne
-            hit.point = hit.point + SHADOW_BIAS * *hit.normal;
+            // hit.point = hit.point + SHADOW_BIAS * *hit.normal;
 
             // Find shadows
             for light in lights {
+
+                let vector_to_light: Vector3 = light.get_origin() - hit.point;
+
+                let unit_to_light = Unit::try_new(vector_to_light, NORM_EPS).unwrap();
+
+                // Shifting along the bias against shadow acne
+                hit.point = hit.point + SHADOW_BIAS * *unit_to_light;
 
                 let vector_to_light: Vector3 = light.get_origin() - hit.point;
                 let distance_to_light: Scalar = vector_to_light.norm();
@@ -150,8 +157,8 @@ fn main() {
     logger.info("Setting up scene...");
 
     // Set image resolution and ouput path:
-    let width = 2 * 1920;
-    let height = 2 * 1080;
+    let width = 4 * 1920;
+    let height = 4 * 1080;
     let file_path = r"output/traced.png";
 
     // Camera setup:

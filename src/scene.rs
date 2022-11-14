@@ -1,4 +1,4 @@
-use crate::{Vector3, Scalar};
+use crate::{Scalar, Vector3};
 
 pub struct Material {
     albedo: Vector3,
@@ -9,16 +9,16 @@ pub struct Material {
 pub struct Sphere {
     position: Vector3,
     radius: Scalar,
-    material_index: u32
+    material_index: u32,
 }
 
 pub struct Light {
     position: Vector3,
-    strength: Scalar
+    strength: Scalar,
 }
 
 pub struct Scene {
-    spheres: Vec<Sphere>,
-    lights: Vec<Light>,
-    materials: Vec<Material>,
+    pub spheres: Vec<Sphere>,
+    pub lights: Vec<Light>,
+    pub materials: Vec<Material>,
 }

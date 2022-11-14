@@ -29,3 +29,9 @@ pub fn hex_to_rgb(hexcode: &str) -> Result<Vector3, &str> {
         Err("Hexcode must start with # and have 6 follow-up characters. Example: '#FFFFFF'.")
     }
 }
+
+pub fn push_color(buffer: &mut Vec<u8>, color: &Vector3) {
+    buffer.push(scalar_to_u8(color.x));
+    buffer.push(scalar_to_u8(color.y));
+    buffer.push(scalar_to_u8(color.z));
+}

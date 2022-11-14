@@ -1,10 +1,10 @@
-use crate::{Scalar, Vector3};
 use crate::ray::Ray;
+use crate::{Scalar, Vector3};
 
 pub struct Camera {
     position: Vector3,
-    pub width: u32,                   // Pixel count - U
-    pub height: u32,                  // Pixel count - V
+    pub width: u32,               // Pixel count - U
+    pub height: u32,              // Pixel count - V
     lens_size: (Scalar, Scalar),  // World space lens size
     pixel_size: (Scalar, Scalar), // World space pixel size
 }
@@ -30,8 +30,7 @@ impl Camera {
         }
     }
 
-    pub fn generate_rays(&mut self) -> Vec<Ray> {
-
+    pub fn generate_rays(&self) -> Vec<Ray> {
         let mut rays: Vec<Ray> = vec![];
         let mut iterator_state = 0;
 

@@ -82,13 +82,6 @@ fn trace(ray: Ray, hittables: &ObjectList, lights: &LightList, depth: usize) -> 
             // Find shadows
             for light in lights {
                 let vector_to_light: Vector3 = light.get_origin() - hit.point;
-
-                let unit_to_light = Unit::try_new(vector_to_light, NORM_EPS).unwrap();
-
-                // Shifting along the bias against shadow acne
-                // let p = hit.point + SHADOW_BIAS * *unit_to_light;
-
-                let vector_to_light: Vector3 = light.get_origin() - hit.point;
                 let distance_to_light: Scalar = vector_to_light.norm();
                 let ray_to_light = Ray::new(hit.point, vector_to_light);
 

@@ -1,12 +1,12 @@
 [package]
 name = "rust_ray_tracer"
-version = "0.1.0"
-authors = ["pseres <peet.seres@gmail.com>"]
-edition = "2018"
+version = "0.2.0"
+authors = ["peter-seres <peter.seres.ae@gmail.com>"]
+edition = "2022"
 
 [dependencies]
-png = "0.16.8"
-nalgebra = "0.26.2"
+png = "0.17.7"
+nalgebra = "0.31.4"
 time = "*"
 
 [profile.dev]

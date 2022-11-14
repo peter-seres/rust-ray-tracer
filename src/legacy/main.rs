@@ -1,5 +1,5 @@
 mod camera;
-mod color;
+// mod color;
 mod consts;
 mod hittables;
 mod image;
@@ -10,7 +10,7 @@ mod types;
 mod scene;
 
 pub use camera::Camera;
-pub use color::{Color, ColorData};
+// pub use color::{Color, ColorData};
 pub use consts::*;
 pub use hittables::{Hittable, InfPlane, Sphere};
 pub use image::Image;
@@ -29,14 +29,14 @@ const RECURSION_DEPTH: usize = 2;
 const RAY_MAX_DIST: Scalar = 1e3;
 
 struct Hit {
-    point: Point,
-    color: Color,
-    normal: Normal,
+    point: Vector3,
+    color: Vector3,
+    normal: Unit<Vector3>,
     distance: Scalar,
 }
 
 fn raycast(ray: Ray, hittables: &ObjectList) -> Option<Hit> {
-    let mut hit: (Scalar, Option<(Color, Normal)>) = (RAY_MAX_DIST, None);
+    let mut hit: (Scalar, Option<(Vector3, Normal)>) = (RAY_MAX_DIST, None);
 
     for h in hittables {
         match h.intersect(&ray) {

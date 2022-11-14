@@ -1,12 +1,14 @@
 [package]
 name = "rust_ray_tracer"
 version = "0.2.0"
-authors = ["peter-seres <peter.seres.ae@gmail.com>"]
 edition = "2021"
+authors = ["peter-seres <peter.seres.ae@gmail.com>"]
+description = "Ray/path tracer written in pure Rust using Cherno's lessons."
+repository = "https://www.github.com/peter-seres/rust_ray_tracer"
 
 [dependencies]
-png = "0.17.7"
 nalgebra = "0.31.4"
+png = "0.17.7"
 time = "*"
 
 [profile.dev]

@@ -2,7 +2,7 @@
 name = "rust_ray_tracer"
 version = "0.2.0"
 authors = ["peter-seres <peter.seres.ae@gmail.com>"]
-edition = "2022"
+edition = "2021"
 
 [dependencies]
 png = "0.17.7"

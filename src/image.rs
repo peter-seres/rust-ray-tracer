@@ -23,7 +23,7 @@ impl<'a> Image<'a> {
         let w = &mut BufWriter::new(file);
 
         let mut encoder = png::Encoder::new(w, self.width, self.height);
-        encoder.set_color(png::ColorType::RGB);
+        encoder.set_color(png::ColorType::Rgb);
         encoder.set_depth(png::BitDepth::Eight);
 
         let mut writer = encoder.write_header().unwrap();

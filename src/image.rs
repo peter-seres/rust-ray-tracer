@@ -1,48 +1,42 @@
+use crate::{Scalar, Vector3};
 use std::fs::File;
 use std::io::BufWriter;
 use std::path::Path;
 
-pub struct Image<'a> {
-    width: u32,
-    height: u32,
-    data: &'a Vec<u8>,
+pub fn clip(x: Scalar) -> Scalar {
+    x.max(0.0).min(1.0)
 }
 
-impl<'a> Image<'a> {
-    pub fn new(width: u32, height: u32, data: &'a Vec<u8>) -> Image {
-        Image {
-            width,
-            height,
-            data,
-        }
+pub fn u8_to_scalar(x: u8) -> Scalar {
+    x as Scalar / u8::MAX as Scalar
+}
+
+pub fn scalar_to_u8(x: Scalar) -> u8 {
+    let y = clip(x);
+    (255.99 * y) as u8
+}
+
+pub fn hex_byte_to_scalar(h: &str) -> Scalar {
+    u8::from_str_radix(h, 16).unwrap() as Scalar / u8::MAX as Scalar
+}
+
+pub fn hex_to_rgb(hexcode: &str) -> Result<Vector3, &str> {
+    if hexcode.starts_with("#") && (hexcode.len() == 7) {
+        let r = hex_byte_to_scalar(&hexcode[1..3]);
+        let g = hex_byte_to_scalar(&hexcode[3..5]);
+        let b = hex_byte_to_scalar(&hexcode[5..7]);
+
+        let color = Vector3::new(r, g, b);
+        Ok(color)
+    } else {
+        Err("Hexcode must start with # and have 6 follow-up characters. Example: '#FFFFFF'.")
     }
+}
 
-    pub fn save_as_png(&self, file_path: &str) -> Result<(), &str> {
-        let path = Path::new(file_path);
-        let file = match File::create(path) {
-            Ok(f) => f,
-            Err(e) => {
-                panic!(
-                    "Error while opening file at path: {:?}, error: {:?}",
-                    path, e
-                );
-            }
-        };
-
-        let w = &mut BufWriter::new(file);
-
-        let mut encoder = png::Encoder::new(w, self.width, self.height);
-        encoder.set_color(png::ColorType::Rgb);
-        encoder.set_depth(png::BitDepth::Eight);
-
-        let mut writer = encoder
-            .write_header()
-            .expect("Header wasn't written correctly.");
-        writer
-            .write_image_data(self.data)
-            .expect("Image data incorrect");
-        Ok(())
-    }
+pub fn push_color(buffer: &mut Vec<u8>, color: &Vector3) {
+    buffer.push(scalar_to_u8(color.x));
+    buffer.push(scalar_to_u8(color.y));
+    buffer.push(scalar_to_u8(color.z));
 }
 
 pub fn save_image_to_png(file_path: &str, width: u32, height: u32, data: &Vec<u8>) {

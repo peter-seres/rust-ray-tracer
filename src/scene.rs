@@ -1,24 +1,25 @@
 use crate::{Scalar, Vector3};
+use crate::hit::Hittable;
 
 pub struct Material {
-    albedo: Vector3,
-    roughness: Scalar,
-    metallic: Scalar,
+    pub albedo: Vector3,
+    pub roughness: Scalar,
+    pub metallic: Scalar,
 }
 
 pub struct Sphere {
-    position: Vector3,
-    radius: Scalar,
-    material_index: u32,
+    pub position: Vector3,
+    pub radius: Scalar,
+    pub material_index: u32,
 }
 
 pub struct Light {
-    position: Vector3,
-    strength: Scalar,
+    pub position: Vector3,
+    pub strength: Scalar,
 }
 
 pub struct Scene {
-    pub spheres: Vec<Sphere>,
+    pub hittables: Vec<Box<dyn Hittable>>,
     pub lights: Vec<Light>,
     pub materials: Vec<Material>,
 }

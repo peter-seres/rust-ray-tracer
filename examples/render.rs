@@ -1,35 +1,40 @@
-use std::vec;
-
 use rust_ray_tracer;
 use rust_ray_tracer::camera::Camera;
+use rust_ray_tracer::colors::BLUE;
 use rust_ray_tracer::image::save_image_to_png;
 use rust_ray_tracer::renderer::Renderer;
-use rust_ray_tracer::scene::Scene;
+use rust_ray_tracer::scene::{Scene, Sphere, Material};
+use rust_ray_tracer::directions::*;
+use rust_ray_tracer::Vector3;
 
-const WIDTH: u32 = 100;
-const HEIGHT: u32 = 80;
+const WIDTH: u32 = 1920;
+const HEIGHT: u32 = 1080;
 
 fn main() {
-    rust_ray_tracer::hello();
-
-    // Setup camera
     let camera = Camera::new(WIDTH, HEIGHT, 45);
 
-    // Setup scene
-    let scene = Scene {
-        spheres: vec![],
-        lights: vec![],
-        materials: vec![],
+    let sphere_0 = Box::new(Sphere {
+        position: 3.0 * FORWARD,
+        radius: 1.0,
+        material_index: 0
+    });
+
+    let material_0 = Material {
+        albedo: BLUE,
+        metallic: 1.0,
+        roughness: 1.0
     };
 
-    // Render
+    let scene = Scene {
+        hittables: vec![sphere_0],
+        lights: vec![],
+        materials: vec![material_0]
+    };
+
     let mut renderer = Renderer::new(&camera, &scene);
-    let buffer: Vec<u8> = renderer.render();
+    let image: Vec<u8> = renderer.render();
 
-    // Save the image
-    let file_path = r"output/traced.png";
-    // let im = Image::new(WIDTH, HEIGHT, &buffer);
-    // im.save_as_png(file_path).unwrap();
+    let file_path = "output/test_render.png";
+    save_image_to_png(file_path, WIDTH, HEIGHT, &image);
 
-    save_image_to_png(&file_path, WIDTH, HEIGHT, &buffer);
 }

@@ -30,24 +30,16 @@ impl Camera {
         }
     }
 
-    pub fn generate_rays(&self) -> Vec<Ray> {
-        let mut rays: Vec<Ray> = vec![];
-        let mut iterator_state = 0;
+    fn ray_direction_per_pixel(&self, i: u32, j: u32) -> Vector3 {
 
-        let i = iterator_state % self.width;
-        let j = iterator_state / self.width;
+        let x = -self.lens_size.0 / 2.0 + (i as Scalar) * self.pixel_size.0;
+        let y = self.lens_size.1 / 2.0 - (j as Scalar) * self.pixel_size.1;
 
-        if j != self.height {
-            iterator_state += 1;
-            let ray_origin = self.position; // todo: camera position
+        Vector3::new(x, y, -1.0)
+    }
 
-            let x = -self.lens_size.0 / 2.0 + (i as Scalar) * self.pixel_size.0;
-            let y = self.lens_size.1 / 2.0 - (j as Scalar) * self.pixel_size.1;
-
-            let ray_dir = Vector3::new(x, y, -1.0);
-            rays.push(Ray::new(ray_origin, ray_dir));
-        }
-
-        rays
+    pub fn generate_ray(&self, i: u32, j: u32) -> Ray {
+        let ray_dir = self.ray_direction_per_pixel(i, j);
+        Ray::new(self.position, ray_dir)
     }
 }
